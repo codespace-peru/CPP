@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/CtxAddFavorito"
+        android:title="@string/add_favorites">
+    </item>
+    <item
+        android:id="@+id/CtxDelFavorito"
+        android:title="@string/del_favorites">
+    </item>
+    <item
+        android:id="@+id/CtxAddNote"
+        android:title="@string/add_note">
+    </item>
+    <item
+        android:id="@+id/CtxShowNote"
+        android:title="@string/show_note">
+    </item>
+    <item
+        android:id="@+id/CtxEditNote"
+        android:title="@string/edit_note">
+    </item>
+    <item
+        android:id="@+id/CtxCopyArticulo"
+        android:title="@string/copy_clipboard">
+    </item>
+</menu>

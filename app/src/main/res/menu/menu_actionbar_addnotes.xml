@@ -1,0 +1,15 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:appcompat="http://schemas.android.com/apk/res-auto" >
+
+    <item android:id="@+id/action_cancelarNota"
+        android:title="@string/action_cancel"
+        android:icon="@drawable/ic_action_cancel"
+        android:orderInCategory="1"
+        appcompat:showAsAction="always|withText" />
+
+    <item android:id="@+id/action_saveNota"
+        android:title="@string/action_save"
+        android:icon="@drawable/ic_action_save"
+        android:orderInCategory="2"
+        appcompat:showAsAction="always|withText" />
+</menu>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/CtxEditNote"
+        android:title="@string/edit_note">
+    </item>
+    <item
+        android:id="@+id/CtxDelNote"
+        android:title="@string/del_notes">
+    </item>
+    <item
+        android:id="@+id/CtxCopyNote"
+        android:title="@string/copy_clipboard">
+    </item>
+</menu>
