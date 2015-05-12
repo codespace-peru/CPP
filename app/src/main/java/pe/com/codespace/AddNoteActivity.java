@@ -2,7 +2,7 @@ package pe.com.codespace;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,12 +13,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.analytics.tracking.android.EasyTracker;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 /**
- * Created by Carlos on 01/03/14.
+ * Creado por Carlos on 01/03/14.
+ * Modificado el 10/05/2015
  */
-public class AddNoteActivity extends ActionBarActivity {
+public class AddNoteActivity extends AppCompatActivity {
     SQLiteHelper myDBHelper;
     String nota = "";
     String art="";
@@ -30,6 +32,11 @@ public class AddNoteActivity extends ActionBarActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addnote);
+        if(getSupportActionBar()!=null){
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setIcon(R.drawable.ic_launcher);
+        }
 
         try{
             myDBHelper = SQLiteHelper.getInstance(this);
@@ -63,9 +70,16 @@ public class AddNoteActivity extends ActionBarActivity {
                 textView1.setText("AGREGAR NOTA");
             }
             // Agregar el adView
-            AdView adView = (AdView)this.findViewById(R.id.adView5);
+            AdView adView = (AdView)this.findViewById(R.id.adViewAddNotas);
             AdRequest adRequest = new AdRequest.Builder().build();
             adView.loadAd(adRequest);
+
+            //Analytics
+            Tracker tracker = ((AnalyticsApplication)  getApplication()).getTracker(AnalyticsApplication.TrackerName.APP_TRACKER);
+            String nameActivity = getApplicationContext().getPackageName() + "." + this.getClass().getSimpleName();
+            tracker.setScreenName(nameActivity);
+            tracker.enableAdvertisingIdCollection(true);
+            tracker.send(new HitBuilders.AppViewBuilder().build());
 
         }catch (Exception ex){
             Log.e("Debug", "MessageError: " + ex);
@@ -84,7 +98,7 @@ public class AddNoteActivity extends ActionBarActivity {
             case R.id.action_saveNota:
                 nota = editText.getText().toString();
                 if(myDBHelper.AddNota(art,nota)){
-                    if(modify==true)
+                    if(modify)
                         Toast.makeText(AddNoteActivity.this,"Se modificó la nota de " + articulo,Toast.LENGTH_LONG).show();
                     else
                         Toast.makeText(AddNoteActivity.this,"Se agregó la nota a " + articulo,Toast.LENGTH_LONG).show();
@@ -98,15 +112,4 @@ public class AddNoteActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        EasyTracker.getInstance(this).activityStart(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        EasyTracker.getInstance(this).activityStop(this);
-    }
 }

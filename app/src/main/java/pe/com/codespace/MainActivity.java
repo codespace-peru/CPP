@@ -3,10 +3,11 @@ package pe.com.codespace;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -24,23 +25,29 @@ import java.util.List;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.analytics.tracking.android.EasyTracker;
+import pe.com.codespace.AnalyticsApplication.TrackerName;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
-public class MainActivity extends ActionBarActivity implements SearchView.OnQueryTextListener {
+public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
-    private SearchView searchView;
     SQLiteHelper myDBHelper;
     ExpandableListAdapter listAdapter;
     ExpandableListView myExpandList;
     List<RowGroupCpp> listDataHeader;
     HashMap<RowGroupCpp, List<RowItemCpp>> listDataChild;
     MenuItem menuItem;
-    private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if(getSupportActionBar()!=null){
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setIcon(R.drawable.ic_launcher);
+        }
 
         myDBHelper = SQLiteHelper.getInstance(this);
 
@@ -75,12 +82,16 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
         myExpandList.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
             public boolean onGroupClick(ExpandableListView parent, View view, int groupPosition, long id) {
-                Intent intent = new Intent(view.getContext(),CppTextActivity.class);
-                intent.putExtra("titulo",groupPosition);
-                intent.putExtra("capitulo",0); // Los titulos 0, 5,6,7 y 8 no tienen capitulos
-                int i = (int)id;
-                switch (i){
-                    case 0: case 5: case 6: case 7: case 8:
+                Intent intent = new Intent(view.getContext(), CppTextActivity.class);
+                intent.putExtra("titulo", groupPosition);
+                intent.putExtra("capitulo", 0); // Los titulos 0, 5,6,7 y 8 no tienen capitulos
+                int i = (int) id;
+                switch (i) {
+                    case 0:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
                         view.getContext().startActivity(intent);
                         break;
                 }
@@ -89,15 +100,23 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
         });
 
         // Agregar el adView
-        AdView adView = (AdView)this.findViewById(R.id.adView1);
+        AdView adView = (AdView)this.findViewById(R.id.adViewMain);
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
+
+        //Analytics
+        Tracker tracker = ((AnalyticsApplication)  getApplication()).getTracker(TrackerName.APP_TRACKER);
+        String nameActivity = getApplicationContext().getPackageName() + "." + this.getClass().getSimpleName();
+        tracker.setScreenName(nameActivity);
+        tracker.enableAdvertisingIdCollection(true);
+        tracker.send(new HitBuilders.AppViewBuilder().build());
+
     }
 
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
+        if (requestCode == MyValues.VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches.size() > 0){
                 Intent intent = new Intent(this,SearchResultsActivity.class);
@@ -113,7 +132,7 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_actionbar_main, menu);
         final MenuItem searchItem = menu.findItem(R.id.action_search);
-        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(this);
         searchView.setQueryHint("Búsqueda...");
         searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
@@ -132,8 +151,7 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
             case R.id.action_search:
                 break;
             case R.id.action_voice:
-                SpeechRecognitionHelper speech = new SpeechRecognitionHelper();
-                speech.run(this);
+                SpeechRecognitionHelper.run(this);
                 break;
             case R.id.action_goto:
                 AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -149,7 +167,7 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
                 alert.setPositiveButton("Mostrar", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         String value = input.getText().toString();
-                        if(value!=null && !value.isEmpty()){
+                        if(!value.isEmpty()){
                             String[] articulo;
                             articulo = myDBHelper.getArticulo(value);
                             int art = Integer.parseInt(value);
@@ -181,6 +199,9 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
                 Intent intent1 = new Intent(this,NotesActivity.class);
                 this.startActivity(intent1);
                 break;
+            case R.id.action_share:
+                Social.share(this, getResources().getString(R.string.action_share), getResources().getString(R.string.share_description) + " " + Uri.parse("https://play.google.com/store/apps/details?id=pe.com.codespace"));
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -200,9 +221,9 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
     }
 
     private void prepararMenu(){
-        listDataHeader = new ArrayList<RowGroupCpp>();
-        listDataChild = new HashMap<RowGroupCpp, List<RowItemCpp>>();
-        int size=0;
+        listDataHeader = new ArrayList<>();
+        listDataChild = new HashMap<>();
+        int size;
 
         String[][] Titulos = myDBHelper.getTitulos();
         for(int i=0;i<9;i++) {
@@ -210,26 +231,26 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
             listDataHeader.add(temp);
         }
 
-        List<RowItemCpp> titulo1 = new ArrayList<RowItemCpp>();
+        List<RowItemCpp> titulo1 = new ArrayList<>();
         String[][] CapitulosxTitulo1 = myDBHelper.getCapitulosxTitulo(1) ;
         size = CapitulosxTitulo1[0].length;
         for(int i=0;i<size;i++)
             titulo1.add(new RowItemCpp(CapitulosxTitulo1[0][i], CapitulosxTitulo1[1][i], CapitulosxTitulo1[2][i]));
 
-        List<RowItemCpp> titulo2 = new ArrayList<RowItemCpp>();
+        List<RowItemCpp> titulo2 = new ArrayList<>();
         String[][] CapitulosxTitulo2 = myDBHelper.getCapitulosxTitulo(2) ;
         size = CapitulosxTitulo2[0].length;
         for(int i=0;i<size;i++)
             titulo2.add(new RowItemCpp(CapitulosxTitulo2[0][i], CapitulosxTitulo2[1][i], CapitulosxTitulo2[2][i]));
 
-        List<RowItemCpp> titulo3 = new ArrayList<RowItemCpp>();
+        List<RowItemCpp> titulo3 = new ArrayList<>();
         String[][] CapitulosxTitulo3 = myDBHelper.getCapitulosxTitulo(3) ;
         size = CapitulosxTitulo3[0].length;
         for(int i=0;i<size;i++){
             titulo3.add(new RowItemCpp(CapitulosxTitulo3[0][i],CapitulosxTitulo3[1][i],CapitulosxTitulo3[2][i]));
         }
 
-        List<RowItemCpp> titulo4 = new ArrayList<RowItemCpp>();
+        List<RowItemCpp> titulo4 = new ArrayList<>();
         String[][] CapitulosxTitulo4 = myDBHelper.getCapitulosxTitulo(4) ;
         size = CapitulosxTitulo4[0].length;
         for(int i=0;i<size;i++){
@@ -249,15 +270,4 @@ public class MainActivity extends ActionBarActivity implements SearchView.OnQuer
 
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        EasyTracker.getInstance(this).activityStart(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        EasyTracker.getInstance(this).activityStop(this);
-    }
 }

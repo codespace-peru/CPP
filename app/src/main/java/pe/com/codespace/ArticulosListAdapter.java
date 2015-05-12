@@ -11,19 +11,18 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import java.text.Normalizer;
 import java.util.LinkedList;
 import java.util.List;
 
 
 /**
- * Created by Carlos on 17/02/14.
+ * Creado por Carlos on 17/02/14.
  */
 public class ArticulosListAdapter extends ArrayAdapter {
 
     private final Context context;
     private final String[][] values;
-    final List<String[]> misArticulos = new LinkedList<String[]>();
+    final List<String[]> misArticulos = new LinkedList<>();
     String searchText = "";
     boolean search = false;
 
@@ -64,9 +63,16 @@ public class ArticulosListAdapter extends ArrayAdapter {
         }
 
         String[] arts = misArticulos.get(position);
+        // Oculta el Preambulo en la activity CPPTEXTACTIVITY
         holder.myTitle.setText(arts[0]);
+        if(CppTextActivity.isActive && arts[0].equals("Preámbulo")){
+            holder.myTitle.setVisibility(View.GONE);
+        }
+        else{
+            holder.myTitle.setVisibility(View.VISIBLE);
+        }
         CharSequence cc;
-        if(search == true){
+        if(search){
             cc = searchResaltado(searchText,arts[1]);
             holder.myText.setText(cc);
         }
@@ -93,16 +99,12 @@ public class ArticulosListAdapter extends ArrayAdapter {
         Spannable highlighted = new SpannableString(originalText);
         for(int i=0;i<searchWord.length;i++){
             int start = normalizedText.indexOf(searchWord[i]);
-            if (start < 0) {
-                continue;
-            } else {
                 while (start >= 0) {
                     int spanStart = Math.min(start, originalText.length());
                     int spanEnd = Math.min(start + searchWord[i].length(), originalText.length());
-                    highlighted.setSpan(new BackgroundColorSpan(Color.BLUE), spanStart, spanEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    highlighted.setSpan(new BackgroundColorSpan(Color.YELLOW), spanStart, spanEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     start = normalizedText.indexOf(searchWord[i], spanEnd);
                 }
-            }
         }
         return highlighted;
     }

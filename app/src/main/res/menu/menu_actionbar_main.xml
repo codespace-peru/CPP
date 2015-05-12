@@ -37,6 +37,11 @@
                 android:icon="@drawable/ic_action_edit"
                 android:orderInCategory="6"
                 appcompat:showAsAction="always|withText" />
+            <item android:id="@+id/action_share"
+                android:title="@string/action_share"
+                android:icon="@drawable/ic_action_share"
+                android:orderInCategory="7"
+                appcompat:showAsAction="always|withText" />
         </menu>
     </item>
 </menu>

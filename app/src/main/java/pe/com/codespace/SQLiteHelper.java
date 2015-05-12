@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,11 +16,11 @@ import java.io.OutputStream;
 import java.lang.reflect.Array;
 
 /**
- * Created by Carlos on 7/01/14.
+ * Creado por Carlos on 7/01/14.
  */
 public class SQLiteHelper extends SQLiteOpenHelper {
     private final Context myContext;
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "BD_CPP.db";
     private static final String DATABASE_PATH = "databases/";
     private static File DATABASE_FILE = null;
@@ -98,21 +97,22 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             myInput = assetManager.open(DATABASE_PATH +DATABASE_NAME);
             myOutput = new FileOutputStream(DATABASE_FILE);
             byte[] buffer = new byte[1024];
-            int read=0;
+            int read;
             while ((read = myInput.read(buffer)) != -1) {
                 myOutput.write(buffer, 0, read);
             }
         }
         catch (IOException ex){
+            ex.printStackTrace();
         }
         finally {
             if(myInput != null){
                 try{ myInput.close(); }
-                catch(IOException ex){ }
+                catch(IOException ex){ex.printStackTrace(); }
             }
             if(myOutput!=null){
                 try{ myOutput.close(); }
-                catch (IOException ex){ }
+                catch (IOException ex){ ex.printStackTrace(); }
             }
             setDataBaseVersion();
             mInvalidDatabaseFile = false;
@@ -122,7 +122,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     private void setDataBaseVersion(){
         SQLiteDatabase db = null;
         try{
-            db = SQLiteDatabase.openDatabase(DATABASE_FILE.getAbsolutePath(),null,SQLiteDatabase.OPEN_READWRITE);
+            db = SQLiteDatabase.openDatabase(DATABASE_FILE.getAbsolutePath(), null, SQLiteDatabase.OPEN_READWRITE);
             db.execSQL("PRAGMA user_version=" + DATABASE_VERSION);
         }
         catch (SQLiteException ex){
@@ -332,18 +332,17 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     public boolean es_favorito(String art) {
         SQLiteDatabase db = null;
+        Cursor cursor = null;
         try{
             db = getReadableDatabase();
-            Cursor cursor = db.rawQuery("select ES_FAVORITO from ARTICULOS where NUMART = ? ", new String[]{art});
+            cursor = db.rawQuery("select ES_FAVORITO from ARTICULOS where NUMART = ? ", new String[]{art});
             cursor.moveToFirst();
-            if(Integer.parseInt(cursor.getString(0))  == 1 )
-                return true;
-            else
-                return false;
+            return Integer.parseInt(cursor.getString(0))  == 1;
         }catch (SQLiteException ex){
             throw ex;
         }
         finally {
+            cursor.close();
             if(db != null && db.isOpen()){
                 db.close();
             }
@@ -354,7 +353,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = null;
         try{
             db = getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT NUMTIT, NUMART, ARTICULO FROM ARTICULOS WHERE ES_FAVORITO = ? ", new String[] {"1"});
+            Cursor cursor = db.rawQuery("SELECT NUMTIT, NUMART, ARTICULO FROM ARTICULOS WHERE ES_FAVORITO = ? ", new String[]{"1"});
             String[][] arrayOfString = (String[][])Array.newInstance(String.class, new int[] {cursor.getCount(),3});
             int i = 0;
             int tit = -1;
@@ -466,21 +465,20 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     public boolean hay_nota(String art) {
         SQLiteDatabase db = null;
+        Cursor cursor = null;
         try{
             db = getReadableDatabase();
-            Cursor cursor = db.rawQuery("select HAY_NOTAS from ARTICULOS where NUMART = ? ", new String[]{art});
+            cursor = db.rawQuery("select HAY_NOTAS from ARTICULOS where NUMART = ? ", new String[]{art});
             if(cursor.moveToFirst()){
-                if(cursor.getInt(0)  == 1 )
-                    return true;
-                else
-                    return false;
+                return cursor.getInt(0) == 1;
             }
-            else
-                return false;
+            else return false;
         }catch (SQLiteException ex){
+            ex.printStackTrace();
             throw ex;
         }
         finally {
+            cursor.close();
             if(db != null && db.isOpen()){
                 db.close();
             }

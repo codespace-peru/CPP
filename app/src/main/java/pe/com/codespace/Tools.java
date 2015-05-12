@@ -1,14 +1,11 @@
 package pe.com.codespace;
 
-import android.content.Context;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.widget.TextView;
 
-import java.lang.reflect.Field;
 
 /**
- * Created by Carlos on 01/03/14.
+ * Creado por Carlos on 01/03/14.
  */
 public class Tools {
 

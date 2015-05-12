@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.Html;
 import android.util.Log;
@@ -25,14 +25,16 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.analytics.tracking.android.EasyTracker;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import java.util.ArrayList;
 
 /**
- * Created by Carlos on 20/02/14.
+ * Creado por Carlos on 20/02/14.
+ * Modificado el 10/05/2015
  */
-public class SearchResultsActivity extends ActionBarActivity implements SearchView.OnQueryTextListener {
+public class SearchResultsActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     ListView myList;
     SQLiteHelper myDBHelper;
@@ -43,12 +45,17 @@ public class SearchResultsActivity extends ActionBarActivity implements SearchVi
     SearchView searchView;
     String searchText;
     MenuItem menuItem;
-    private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_searchresults);
+        if(getSupportActionBar()!=null){
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setIcon(R.drawable.ic_launcher);
+        }
 
         Intent intent = getIntent();
         searchText = intent.getExtras().getString("searchText");
@@ -80,9 +87,16 @@ public class SearchResultsActivity extends ActionBarActivity implements SearchVi
                 }
             });
             // Agregar el adView
-            AdView adView = (AdView)this.findViewById(R.id.adView6);
+            AdView adView = (AdView)this.findViewById(R.id.adViewSearch);
             AdRequest adRequest = new AdRequest.Builder().build();
             adView.loadAd(adRequest);
+
+            //Analytics
+            Tracker tracker = ((AnalyticsApplication)  getApplication()).getTracker(AnalyticsApplication.TrackerName.APP_TRACKER);
+            String nameActivity = getApplicationContext().getPackageName() + "." + this.getClass().getSimpleName();
+            tracker.setScreenName(nameActivity);
+            tracker.enableAdvertisingIdCollection(true);
+            tracker.send(new HitBuilders.AppViewBuilder().build());
 
         }catch (Exception ex){
             Log.e("Debug", "MessageError: " + ex);
@@ -91,7 +105,7 @@ public class SearchResultsActivity extends ActionBarActivity implements SearchVi
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
+        if (requestCode == MyValues.VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches.size() > 0){
                 finish();
@@ -112,11 +126,10 @@ public class SearchResultsActivity extends ActionBarActivity implements SearchVi
         menu.setHeaderTitle(articuloSeleccionado);
         inflater.inflate(R.menu.menu_contextual_lista,menu);
 
-        Tools tools = new Tools();
         int size = articuloSeleccionado.length();
         if(size>=12){
             art = articuloSeleccionado.substring(9,size-3);
-            if(!tools.isNumeric(art)){
+            if(!Tools.isNumeric(art)){
                 art = articuloSeleccionado;
                 artTemp = articuloSeleccionado;
             }
@@ -238,16 +251,7 @@ public class SearchResultsActivity extends ActionBarActivity implements SearchVi
             case R.id.action_search:
                 break;
             case R.id.action_voice:
-                SpeechRecognitionHelper speech = new SpeechRecognitionHelper();
-                speech.run(this);
-                break;
-            case R.id.action_favorites:
-                Intent intent = new Intent(this,FavoritosActivity.class);
-                this.startActivity(intent);
-                break;
-            case R.id.action_notes:
-                Intent intent1 = new Intent(this,NotesActivity.class);
-                this.startActivity(intent1);
+                SpeechRecognitionHelper.run(this);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -268,15 +272,4 @@ public class SearchResultsActivity extends ActionBarActivity implements SearchVi
         return false;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        EasyTracker.getInstance(this).activityStart(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        EasyTracker.getInstance(this).activityStop(this);
-    }
 }

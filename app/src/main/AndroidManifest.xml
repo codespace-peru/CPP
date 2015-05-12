@@ -6,10 +6,11 @@
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
+        android:name=".AnalyticsApplication"
         android:allowBackup="true"
-        android:icon="@drawable/icono"
+        android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/Theme.AppCompat.Light" >
+        android:theme="@style/AppTheme" >
 
         <activity
             android:name="pe.com.codespace.MainActivity"

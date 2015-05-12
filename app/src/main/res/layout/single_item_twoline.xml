@@ -3,7 +3,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="@dimen/small_margin">
 
     <TextView
         android:id="@+id/tvTitleItem"
@@ -11,7 +12,6 @@
         android:layout_height="wrap_content"
         android:text="Titulo del Articulo"
         android:textStyle="bold"
-        android:paddingLeft="3dp"
         android:textSize="@dimen/text_title_article_size"
         android:textColor="@color/text_color1"/>
 
@@ -20,10 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Contenido del Articulo"
-        android:layout_below="@android:id/text1"
-        android:paddingLeft="3dp"
-        android:paddingRight="3dp"
         android:textSize="@dimen/text_content_article_size"
-        android:textColor="@color/text_color2"/>
+        android:textColor="@color/text_color1"/>
 
 </LinearLayout>

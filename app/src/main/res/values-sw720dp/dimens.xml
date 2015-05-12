@@ -1,0 +1,24 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+
+    <!-- Font sizes -->
+    <dimen name="title_size">24sp</dimen>
+    <dimen name="capitule_size">23sp</dimen>
+    <dimen name="text_group_title_size">23sp</dimen>
+    <dimen name="text_group_description_size">22sp</dimen>
+    <dimen name="text_item_title_size">22sp</dimen>
+    <dimen name="text_item_description_size">21sp</dimen>
+    <dimen name="text_title_article_size">22sp</dimen>
+    <dimen name="text_content_article_size">22sp</dimen>
+
+    <!-- margins/padding sizes -->
+    <dimen name="small_margin">8dp</dimen>
+    <dimen name="large_margin">16dp</dimen>
+
+    <!-- Other sizes -->
+    <dimen name="edit_height_size">600dp</dimen>
+
+    <!-- Fixed sizes -->
+    <dimen name="view_horizontal_height">2dp</dimen>
+
+</resources>

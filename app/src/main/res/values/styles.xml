@@ -1,20 +1,9 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light">
         <!-- Customize your theme here. -->
-
+        <item name="android:windowBackground">@color/background</item>
     </style>
 
-    <!--<style name="Theme.Styled" parent="@style/Theme.AppCompat.Light">
-        &lt;!&ndash; Setting values in the android namespace affects API v14&ndash;&gt;
-        <item name="android:actionBarStyle">
-
-        </item>
-
-        &lt;!&ndash; Setting values in the default namespace affects API v7-13&ndash;&gt;
-        <item name="actionBarStyle">
-
-        </item>
-    </style>-->
 </resources>

@@ -6,9 +6,10 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.speech.RecognizerIntent;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.os.Bundle;
 import android.text.InputFilter;
@@ -26,13 +27,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.analytics.tracking.android.EasyTracker;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import java.util.ArrayList;
 
-public class CppTextActivity extends ActionBarActivity implements SearchView.OnQueryTextListener {
+public class CppTextActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
-    private SearchView searchView;
     ArticulosListAdapter myListAdapter;
     ListView myList;
     SQLiteHelper myDBHelper;
@@ -43,12 +44,19 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
     int tit, cap;
     boolean ir = false;
     int primerArticulo, gotoArticulo;
-    private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
+    public static boolean isActive = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cpp_text);
+        if(getSupportActionBar()!=null){
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setIcon(R.drawable.ic_launcher);
+        }
+
         myDBHelper = SQLiteHelper.getInstance(this);
         Intent intent = getIntent();
         tit = intent.getExtras().getInt("titulo");
@@ -69,24 +77,22 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
             if(tit!=0 && tit!=8){
                 myText.setText("Título " + titTitle[0] + ": " + titTitle[1]);
             }
-            else if(tit==0){//No muestra el Preambulo
-                myText.setText("");
-            }
-            else{
+            else{//Muestra el Anexo como Titulo
                 myText.setText(titTitle[1]);
             }
 
             if(tit!=0 && tit!=5 && tit!=6 && tit!=7 && tit!=8){
                 myText1.setText("Capítulo " + capTitle[0] + ": " + capTitle[1]);
+                myText1.setVisibility(View.VISIBLE);
             }
             else{
-                myText1.setText(capTitle[1]);
+                myText1.setVisibility(View.GONE);
             }
 
             myList = (ListView) findViewById(R.id.lvTextCpp);
             myListAdapter = new ArticulosListAdapter(this,LstArticulos);
             myList.setAdapter(myListAdapter);
-            if(ir==true){
+            if(ir){
                 String tt = LstArticulos[0][0];
                 primerArticulo = Integer.parseInt(tt);
                 gotoArticulo = intent.getExtras().getInt("gotoArticulo");
@@ -101,18 +107,25 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
             });
 
             // Agregar el adView
-            AdView adView = (AdView)this.findViewById(R.id.adView2);
+            AdView adView = (AdView)this.findViewById(R.id.adViewCPPText);
             AdRequest adRequest = new AdRequest.Builder().build();
             adView.loadAd(adRequest);
 
+            //Analytics
+            Tracker tracker = ((AnalyticsApplication)  getApplication()).getTracker(AnalyticsApplication.TrackerName.APP_TRACKER);
+            String nameActivity = getApplicationContext().getPackageName() + "." + this.getClass().getSimpleName();
+            tracker.setScreenName(nameActivity);
+            tracker.enableAdvertisingIdCollection(true);
+            tracker.send(new HitBuilders.AppViewBuilder().build());
+
         } catch (Exception ex) {
             ex.printStackTrace();
-        };
+        }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
+        if (requestCode == MyValues.VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches.size() > 0){
                 Intent intent = new Intent(this,SearchResultsActivity.class);
@@ -131,11 +144,10 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
         articuloSeleccionado = ((TextView) info.targetView.findViewById(R.id.tvTitleItem)).getText().toString();
         menu.setHeaderTitle(articuloSeleccionado);
         inflater.inflate(R.menu.menu_contextual_lista,menu);
-        Tools tools = new Tools();
         int size = articuloSeleccionado.length();
         if(size>=12){
             art = articuloSeleccionado.substring(9,size-3);
-            if(!tools.isNumeric(art)){
+            if(!Tools.isNumeric(art)){
                 art = articuloSeleccionado;
                 artTemp = articuloSeleccionado;
             }
@@ -241,10 +253,10 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
         getMenuInflater().inflate(R.menu.menu_actionbar_main, menu);
         final MenuItem searchItem;
         searchItem = menu.findItem(R.id.action_search);
-        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(this);
         searchView.setQueryHint("Ingrese su búsqueda...");
-        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener(){
+        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
                 MenuItemCompat.collapseActionView(searchItem);
@@ -263,8 +275,7 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
             case R.id.action_search:
                 break;
             case R.id.action_voice:
-                SpeechRecognitionHelper speech = new SpeechRecognitionHelper();
-                speech.run(this);
+                SpeechRecognitionHelper.run(this);
                 break;
             case R.id.action_goto:
                 AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -280,7 +291,7 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
                 alert.setPositiveButton("Mostrar", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         String value = input.getText().toString();
-                        if(value!=null && !value.isEmpty()){
+                        if(!value.isEmpty()){
                             String[] articulo;
                             articulo = myDBHelper.getArticulo(value);
                             int art = Integer.parseInt(value);
@@ -313,6 +324,9 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
                 Intent intent1 = new Intent(this,NotesActivity.class);
                 this.startActivity(intent1);
                 break;
+            case R.id.action_share:
+                Social.share(this, getResources().getString(R.string.action_share), getResources().getString(R.string.share_description) + " " + Uri.parse("https://play.google.com/store/apps/details?id=pe.com.codespace"));
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -332,14 +346,15 @@ public class CppTextActivity extends ActionBarActivity implements SearchView.OnQ
     }
 
     @Override
-    public void onStart() {
+    protected void onStart() {
         super.onStart();
-        EasyTracker.getInstance(this).activityStart(this);
+        isActive = true;
     }
 
     @Override
-    public void onStop() {
+    protected void onStop() {
         super.onStop();
-        EasyTracker.getInstance(this).activityStop(this);
+        isActive = false;
     }
+
 }

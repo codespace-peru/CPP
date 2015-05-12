@@ -6,10 +6,11 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -24,28 +25,33 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.analytics.tracking.android.EasyTracker;
-
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import java.util.ArrayList;
 
 /**
- * Created by Carlos on 16/02/14.
+ * Creado por Carlos on 16/02/14.
+ * Modificado el 10/05/2015
  */
-public class FavoritosActivity extends ActionBarActivity implements SearchView.OnQueryTextListener {
+public class FavoritosActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     ArticulosListAdapter myListAdapter;
     SQLiteHelper myDBHelper;
     ListView myList;
     String articuloSeleccionado= "";
-    private SearchView searchView;
     MenuItem menuItem;
     String art="";
     String artTemp="";
-    private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
+
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favoritos);
+        if(getSupportActionBar()!=null){
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setIcon(R.drawable.ic_launcher);
+        }
 
         try{
             myDBHelper = SQLiteHelper.getInstance(this);
@@ -65,9 +71,17 @@ public class FavoritosActivity extends ActionBarActivity implements SearchView.O
                 }
             });
             // Agregar el adView
-            AdView adView = (AdView)this.findViewById(R.id.adView3);
+            AdView adView = (AdView)this.findViewById(R.id.adViewFavoritos);
             AdRequest adRequest = new AdRequest.Builder().build();
             adView.loadAd(adRequest);
+
+            //Analytics
+            Tracker tracker = ((AnalyticsApplication)  getApplication()).getTracker(AnalyticsApplication.TrackerName.APP_TRACKER);
+            String nameActivity = getApplicationContext().getPackageName() + "." + this.getClass().getSimpleName();
+            tracker.setScreenName(nameActivity);
+            tracker.enableAdvertisingIdCollection(true);
+            tracker.send(new HitBuilders.AppViewBuilder().build());
+
         }catch (Exception ex){
            Log.e("Debug","MessageError: " + ex);
         }
@@ -75,7 +89,7 @@ public class FavoritosActivity extends ActionBarActivity implements SearchView.O
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
+        if (requestCode == MyValues.VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches.size() > 0){
                 Intent intent = new Intent(this,SearchResultsActivity.class);
@@ -88,17 +102,16 @@ public class FavoritosActivity extends ActionBarActivity implements SearchView.O
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo){
-        super.onCreateContextMenu(menu,view,menuInfo);
+        super.onCreateContextMenu(menu, view, menuInfo);
         MenuInflater inflater = getMenuInflater();
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
         articuloSeleccionado = ((TextView) info.targetView.findViewById(R.id.tvTitleItem)).getText().toString();
         menu.setHeaderTitle(articuloSeleccionado);
         inflater.inflate(R.menu.menu_contextual_lista,menu);
-        Tools tools = new Tools();
         int size = articuloSeleccionado.length();
         if(size >= 12){
             art = articuloSeleccionado.substring(9,size-3);
-            if(!tools.isNumeric(art)){//si no es numero
+            if(!Tools.isNumeric(art)){//si no es numero
                 art = articuloSeleccionado;
                 artTemp = articuloSeleccionado;
             }
@@ -196,12 +209,12 @@ public class FavoritosActivity extends ActionBarActivity implements SearchView.O
         itemHide1.setVisible(false);
         itemHide2.setVisible(false);
         searchItem = menu.findItem(R.id.action_search);
-        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(this);
         searchView.setQueryHint("Ingrese su búsqueda...");
-        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener(){
+        searchView.setOnQueryTextFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
-            public void onFocusChange(View view, boolean b){
+            public void onFocusChange(View view, boolean b) {
                 menuItem.collapseActionView();
             }
         });
@@ -215,12 +228,14 @@ public class FavoritosActivity extends ActionBarActivity implements SearchView.O
             case R.id.action_search:
                 break;
             case R.id.action_voice:
-                SpeechRecognitionHelper speech = new SpeechRecognitionHelper();
-                speech.run(this);
+                SpeechRecognitionHelper.run(this);
                 break;
             case R.id.action_notes:
                 Intent intent1 = new Intent(this,NotesActivity.class);
                 this.startActivity(intent1);
+                break;
+            case R.id.action_share:
+                Social.share(this, getResources().getString(R.string.action_share), getResources().getString(R.string.share_description) + " " + Uri.parse("https://play.google.com/store/apps/details?id=pe.com.codespace"));
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -240,15 +255,4 @@ public class FavoritosActivity extends ActionBarActivity implements SearchView.O
         return false;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        EasyTracker.getInstance(this).activityStart(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        EasyTracker.getInstance(this).activityStop(this);
-    }
 }

@@ -5,12 +5,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.TextView;
 import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by Carlos on 23/11/13.
+ * Creado por Carlos on 23/11/13.
  */
 public class CppExpandableListAdapter extends BaseExpandableListAdapter {
     private Context context;
@@ -82,8 +81,16 @@ public class CppExpandableListAdapter extends BaseExpandableListAdapter {
         else{
             holder.myTitle.setText(temp.title);
         }
-        holder.myDescription.setText(temp.description);
-        row.setPadding(-30,0,0,0);
+
+        if(temp.num!=0){
+            holder.myDescription.setText(temp.description);
+            holder.myDescription.setVisibility(View.VISIBLE);
+        }
+        else{
+            holder.myDescription.setVisibility(View.GONE);
+        }
+
+        //row.setPadding(-30,0,0,0);
         return row;
     }
 
@@ -112,7 +119,7 @@ public class CppExpandableListAdapter extends BaseExpandableListAdapter {
         else{
            row = null;
         }
-        //row.setPadding(20,0,0,0);
+        row.setPadding(30,0,0,0);
         return row;
     }
 

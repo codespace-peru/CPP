@@ -1,16 +1,16 @@
 package pe.com.codespace;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.content.ClipboardManager;
 import android.speech.RecognizerIntent;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -24,14 +24,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.google.analytics.tracking.android.EasyTracker;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import java.util.ArrayList;
 
 /**
- * Created by Carlos on 01/03/14.
+ * Creado por Carlos on 01/03/14.
+ * Modificado el 10/05/2015
  */
-public class NotesActivity extends ActionBarActivity implements SearchView.OnQueryTextListener {
+public class NotesActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     SQLiteHelper myDBHelper;
     ArticulosListAdapter myListAdapter;
@@ -39,11 +41,17 @@ public class NotesActivity extends ActionBarActivity implements SearchView.OnQue
     String articuloSeleccionado= "";
     SearchView searchView;
     MenuItem menuItem;
-    private static final int VOICE_RECOGNITION_REQUEST_CODE = 1234;
+
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notes);
+        if(getSupportActionBar()!=null){
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            getSupportActionBar().setIcon(R.drawable.ic_launcher);
+        }
+
         try{
             myDBHelper = SQLiteHelper.getInstance(this);
             String[][] myListNotes = myDBHelper.getNotes();
@@ -62,9 +70,16 @@ public class NotesActivity extends ActionBarActivity implements SearchView.OnQue
                 }
             });
             // Agregar el adView
-            AdView adView = (AdView)this.findViewById(R.id.adView4);
+            AdView adView = (AdView)this.findViewById(R.id.adViewNotas);
             AdRequest adRequest = new AdRequest.Builder().build();
             adView.loadAd(adRequest);
+
+            //Analytics
+            Tracker tracker = ((AnalyticsApplication)  getApplication()).getTracker(AnalyticsApplication.TrackerName.APP_TRACKER);
+            String nameActivity = getApplicationContext().getPackageName() + "." + this.getClass().getSimpleName();
+            tracker.setScreenName(nameActivity);
+            tracker.enableAdvertisingIdCollection(true);
+            tracker.send(new HitBuilders.AppViewBuilder().build());
 
         }catch (Exception ex){
             Log.e("Debug", "MessageError: " + ex);
@@ -73,7 +88,7 @@ public class NotesActivity extends ActionBarActivity implements SearchView.OnQue
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
+        if (requestCode == MyValues.VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
             ArrayList matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (matches.size() > 0){
                 Intent intent = new Intent(this,SearchResultsActivity.class);
@@ -96,13 +111,12 @@ public class NotesActivity extends ActionBarActivity implements SearchView.OnQue
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        String art="";
-        String artTemp="";
-        Tools tools = new Tools();
+        String art;
+        String artTemp;
         int size = articuloSeleccionado.length();
         if(size >= 12){
             art = articuloSeleccionado.substring(9,size-3);
-            if(!tools.isNumeric(art)){//si no es numero
+            if(!Tools.isNumeric(art)){//si no es numero
                 art = articuloSeleccionado;
                 artTemp = articuloSeleccionado;
             }
@@ -188,12 +202,14 @@ public class NotesActivity extends ActionBarActivity implements SearchView.OnQue
             case R.id.action_search:
                 break;
             case R.id.action_voice:
-                SpeechRecognitionHelper speech = new SpeechRecognitionHelper();
-                speech.run(this);
+                SpeechRecognitionHelper.run(this);
                 break;
             case R.id.action_favorites:
                 Intent intent = new Intent(this,FavoritosActivity.class);
                 this.startActivity(intent);
+                break;
+            case R.id.action_share:
+                Social.share(this, getResources().getString(R.string.action_share), getResources().getString(R.string.share_description) + " " + Uri.parse("https://play.google.com/store/apps/details?id=pe.com.codespace"));
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -213,15 +229,4 @@ public class NotesActivity extends ActionBarActivity implements SearchView.OnQue
         return false;
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        EasyTracker.getInstance(this).activityStart(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        EasyTracker.getInstance(this).activityStop(this);
-    }
 }
