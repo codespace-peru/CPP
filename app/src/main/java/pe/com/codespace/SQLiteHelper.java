@@ -52,6 +52,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }
         }
         catch(SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
@@ -126,6 +127,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             db.execSQL("PRAGMA user_version=" + DATABASE_VERSION);
         }
         catch (SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
@@ -374,6 +376,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             cursor.close();
             return arrayOfString;
         }catch(SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
@@ -397,6 +400,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }
             return flag;
         } catch (SQLiteException ex){
+			ex.printStackTrace();
           throw ex;
         }
         finally {
@@ -420,6 +424,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }
             return flag;
         } catch (SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
@@ -454,6 +459,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             cursor.close();
             return arrayOfString;
         }catch(SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
@@ -505,6 +511,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             return arrayOfString;
         }
         catch (SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
@@ -529,6 +536,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }
             return flag;
         } catch (SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
@@ -553,6 +561,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }
             return flag;
         } catch (SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
@@ -597,6 +606,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             return arrayOfString;
         }
         catch (SQLiteException ex){
+			ex.printStackTrace();
             throw ex;
         }
         finally {
